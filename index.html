@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Single-File SaaS Template</title>
+<meta name="description" content="A complete BYOK SaaS scaffolded into one HTML file. Free tier in-browser, Pro tier via Stripe Checkout link, key never leaves the user's machine.">
+<meta name="ai.description" content="Reference implementation of a 'one HTML file SaaS' pattern. Demonstrates: BYOK key entry with validation, gated free vs paid tier (Pro unlocked by a Stripe Checkout license code), state held in JavaScript variables (no localStorage), light and dark themes, full keyboard navigation. Adapt by replacing the demo tool with your own logic. The 'AI text rewriter' here is a placeholder; the value is the architecture.">
+<meta property="og:title" content="Single-File SaaS Template">
+<meta property="og:description" content="A complete BYOK SaaS in one HTML file.">
+<meta property="og:type" content="website">
+<style>
+:root {
+  --bg: #f7f3ee;
+  --surface: #ffffff;
+  --surface-2: #efeae3;
+  --ink: #1a2942;
+  --ink-soft: #5a6478;
+  --rule: #ddd6cb;
+  --rule-strong: #1a2942;
+  --accent: #9a6300;
+  --accent-soft: #f5e9cf;
+  --serif: "Iowan Old Style", "Charter", "Georgia", "Source Serif Pro", serif;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  --ok: #1f6f43;
+  --ok-soft: #e3f2ea;
+  --err: #b3261e;
+  --err-soft: #fbe9e7;
+  --warn: #a04500;
+  --warn-soft: #faecd9;
+}
+[data-theme="dark"] {
+  --bg: #161b25;
+  --surface: #1f2531;
+  --surface-2: #1a2030;
+  --ink: #f0e8d8;
+  --ink-soft: #aab2c0;
+  --rule: #2e3441;
+  --rule-strong: #f0e8d8;
+  --accent: #e6b143;
+  --accent-soft: #3a2c14;
+  --ok: #7fc99c;
+  --ok-soft: #1f3327;
+  --err: #f08585;
+  --err-soft: #3d2222;
+  --warn: #e6a960;
+  --warn-soft: #3d2f1c;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.55;
+  font-size: 15px;
+  min-height: 100vh;
+}
+
+.skip-link { position: absolute; left: -9999px; top: 0; background: var(--accent); color: var(--surface); padding: 0.5rem 1rem; z-index: 100; font-weight: 600; }
+.skip-link:focus { left: 1rem; top: 1rem; }
+
+.layout { max-width: 880px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+/* Header: editorial */
+header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  align-items: end;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 2.5rem;
+}
+.brand {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(1.875rem, 4.5vw, 2.875rem);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+}
+h1 em { font-style: italic; color: var(--accent); }
+.subtitle {
+  margin-top: 0.625rem;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+  max-width: 540px;
+}
+
+.theme-toggle {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  flex-shrink: 0;
+}
+.theme-toggle:hover { background: var(--ink); color: var(--bg); }
+.theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.theme-toggle svg { width: 14px; height: 14px; }
+
+.section { margin-bottom: 2rem; }
+.section-head {
+  display: flex; align-items: baseline; gap: 0.625rem;
+  margin-bottom: 0.875rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+.section-num {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+}
+.section-title {
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  margin-bottom: 0.375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+input[type="password"], input[type="text"], textarea, select {
+  width: 100%;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.625rem 0.75rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-family: var(--sans);
+}
+input[type="password"], input[type="text"] { font-family: var(--mono); font-size: 0.875rem; }
+textarea { resize: vertical; min-height: 110px; line-height: 1.55; }
+input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+
+.help { margin-top: 0.4rem; font-size: 0.75rem; color: var(--ink-soft); line-height: 1.55; }
+.help a { color: var(--accent); }
+
+.row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-top: 0.875rem; }
+
+button.primary, button.secondary, a.primary, a.secondary {
+  font: inherit;
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.55rem 1.1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  text-decoration: none;
+}
+button.primary, a.primary {
+  background: var(--accent);
+  color: #ffffff;
+  border: 1px solid var(--accent);
+}
+button.primary:hover:not(:disabled), a.primary:hover { filter: brightness(0.92); }
+button.secondary, a.secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+}
+button.secondary:hover:not(:disabled), a.secondary:hover { background: var(--ink); color: var(--bg); }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Plan cards */
+.plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.plan {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 1.25rem;
+  position: relative;
+}
+.plan.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.plan-title {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+.plan-price {
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  margin-bottom: 0.875rem;
+}
+.plan-features { list-style: none; font-size: 0.875rem; }
+.plan-features li {
+  padding: 0.3rem 0;
+  display: flex; align-items: flex-start; gap: 0.5rem;
+}
+.plan-features li::before { content: "+"; color: var(--accent); font-weight: 700; flex-shrink: 0; }
+.plan-features li.disabled { color: var(--ink-soft); }
+.plan-features li.disabled::before { content: "-"; color: var(--ink-soft); }
+.plan-cta { margin-top: 0.875rem; }
+.plan-badge {
+  position: absolute;
+  top: 0.625rem; right: 0.625rem;
+  background: var(--ok);
+  color: #ffffff;
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Status block */
+.status {
+  margin-top: 0.625rem;
+  padding: 0.55rem 0.875rem;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  display: flex; align-items: flex-start; gap: 0.5rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+.status .label {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.status.ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.status.warn { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+.status.err { background: var(--err-soft); border-color: var(--err); color: var(--err); }
+
+.spinner {
+  display: inline-block; width: 12px; height: 12px;
+  border: 2px solid currentColor; border-top-color: transparent;
+  border-radius: 50%; animation: spin 0.8s linear infinite; opacity: 0.7;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Tool */
+#tool-output {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.875rem 1rem;
+  margin-top: 0.625rem;
+  font-size: 0.9375rem;
+  white-space: pre-wrap; word-wrap: break-word;
+  min-height: 80px;
+  line-height: 1.55;
+}
+
+/* Usage meter */
+.meter {
+  display: flex; align-items: center; gap: 0.625rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  margin-top: 0.5rem;
+}
+.meter-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.meter-fill {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  transition: width 200ms ease;
+}
+.meter.exceeded .meter-fill { background: var(--err); }
+
+#key-section[data-state="validated"] #key-fields { display: none; }
+#key-section[data-state="validated"] #key-validated { display: flex; }
+#key-validated { display: none; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+
+#tool-section { display: none; }
+#key-section[data-state="validated"] ~ #tool-section { display: block; }
+
+footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  line-height: 1.7;
+}
+footer a { color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; }
+footer a:hover, footer a:focus { color: var(--accent); }
+
+@media (max-width: 640px) {
+  .layout { padding: 1.5rem 1rem 3rem; }
+  header { grid-template-columns: 1fr; gap: 1rem; }
+  .plans { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body data-theme="light">
+<a href="#main" class="skip-link">Skip to main content</a>
+<div class="layout">
+
+  <header>
+    <div>
+      <div class="brand">SaaS / TEMPLATE</div>
+      <h1>Ship a SaaS in <em>one</em><br>HTML file.</h1>
+      <p class="subtitle">A complete BYOK pattern: free tier in-browser, Pro tier unlocked by a license code, no backend required.</p>
+    </div>
+    <button type="button" class="theme-toggle" id="theme-btn" aria-label="Toggle dark theme" aria-pressed="false">
+      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+      </svg>
+      <span id="theme-label">Dark</span>
+    </button>
+  </header>
+
+  <main id="main">
+
+    <section class="section">
+      <div class="section-head">
+        <span class="section-num">01</span>
+        <h2 class="section-title">Choose a plan</h2>
+      </div>
+      <div class="plans">
+        <div class="plan" id="plan-free">
+          <div class="plan-title">Free</div>
+          <div class="plan-price">$0 &middot; 5 calls / day</div>
+          <ul class="plan-features">
+            <li>Your own Anthropic key (BYOK)</li>
+            <li>Daily limit on this device</li>
+            <li>Light and dark themes</li>
+            <li class="disabled">Unlimited usage</li>
+            <li class="disabled">Priority access</li>
+          </ul>
+          <div class="plan-cta">
+            <button type="button" class="secondary" id="plan-free-btn">Use free tier</button>
+          </div>
+        </div>
+        <div class="plan" id="plan-pro">
+          <div class="plan-title">Pro</div>
+          <div class="plan-price">$19 / one-time</div>
+          <ul class="plan-features">
+            <li>Your own Anthropic key (BYOK)</li>
+            <li>Unlimited usage</li>
+            <li>Priority queue</li>
+            <li>Lifetime updates</li>
+            <li>Source code access</li>
+          </ul>
+          <div class="plan-cta row" style="margin-top: 0.875rem;">
+            <a class="primary" href="https://buy.stripe.com/test_REPLACE_WITH_YOUR_LINK" target="_blank" rel="noopener">Buy via Stripe</a>
+            <button type="button" class="secondary" id="plan-pro-btn">I have a code</button>
+          </div>
+        </div>
+      </div>
+      <div id="license-fields" style="display: none; margin-top: 0.875rem;">
+        <label for="license-code">License code</label>
+        <input type="text" id="license-code" placeholder="PRO-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false">
+        <div class="row">
+          <button type="button" class="primary" id="license-submit-btn">Activate</button>
+          <button type="button" class="secondary" id="license-cancel-btn">Cancel</button>
+        </div>
+        <div id="license-status" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="section" id="key-section" data-state="empty" aria-labelledby="key-h">
+      <div class="section-head">
+        <span class="section-num">02</span>
+        <h2 class="section-title" id="key-h">Connect your key</h2>
+      </div>
+      <div id="key-fields">
+        <label for="api-key">Anthropic API key</label>
+        <input type="password" id="api-key" placeholder="sk-ant-..." autocomplete="off" spellcheck="false" aria-describedby="key-help">
+        <p class="help" id="key-help">
+          Get a key at <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>.
+          Held in this browser tab only. Never written to localStorage, sessionStorage, cookies, or any URL. Closing or refreshing this tab discards it.
+        </p>
+        <div class="row">
+          <button type="button" class="primary" id="validate-btn">Validate &amp; save</button>
+        </div>
+        <div id="key-status" role="status" aria-live="polite"></div>
+      </div>
+      <div id="key-validated">
+        <div class="status ok" style="margin: 0; flex: 1;">
+          <span class="label">OK</span>
+          <span>Key validated. Stored in memory for this session only.</span>
+        </div>
+        <button type="button" class="secondary" id="clear-btn">Clear key</button>
+      </div>
+    </section>
+
+    <section class="section" id="tool-section" aria-labelledby="tool-h">
+      <div class="section-head">
+        <span class="section-num">03</span>
+        <h2 class="section-title" id="tool-h">Use the tool</h2>
+      </div>
+      <p class="help" style="margin: 0 0 0.875rem 0;">Reference tool: paste any text, get a tightened rewrite back. Replace this with your own logic; the value of this template is the architecture, not the tool.</p>
+      <label for="tool-input">Text to rewrite</label>
+      <textarea id="tool-input" placeholder="Paste a paragraph that needs tightening..."></textarea>
+      <div class="row">
+        <button type="button" class="primary" id="run-btn">Rewrite</button>
+      </div>
+      <div id="run-status" role="status" aria-live="polite"></div>
+      <div id="tool-output" aria-live="polite" style="display: none;"></div>
+      <div class="meter" id="usage-meter"><span id="usage-text">Free tier: 0 / 5 calls today</span><div class="meter-bar"><div class="meter-fill" id="meter-fill"></div></div></div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Source: <a href="https://github.com/0xelitesystem/single-file-saas-template" target="_blank" rel="noopener">github.com/0xelitesystem/single-file-saas-template</a></p>
+    <p>Related: <a href="https://github.com/0xelitesystem/byok-patterns" target="_blank" rel="noopener">byok-patterns</a> &middot; <a href="https://github.com/0xelitesystem/claude-eval-harness" target="_blank" rel="noopener">claude-eval-harness</a> &middot; <a href="https://github.com/0xelitesystem/prompt-templates" target="_blank" rel="noopener">prompt-templates</a></p>
+    <p>This is a reference implementation. The Stripe link is a placeholder. The license check is client-side and trivial to bypass; for real revenue use server-side verification (notes in the README). Not affiliated with Anthropic or Stripe.</p>
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+// =============================================================================
+// CONFIG. Replace these for your own SaaS.
+// =============================================================================
+const CONFIG = {
+  freeTierDailyLimit: 5,
+  // The license code prefix. Real implementations should verify codes server-side.
+  // This client-side check is for demo purposes only.
+  licenseCodePattern: /^PRO-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/,
+  apiBase: "https://api.anthropic.com/v1/messages",
+  apiVersion: "2023-06-01",
+  model: "claude-haiku-4-5", // Use the cheapest model for the demo
+  systemPrompt: "You are a copy editor. Rewrite the provided text to be tighter and clearer. Keep the same meaning. Cut unnecessary hedging and filler. Return only the rewritten text, no preamble."
+};
+
+// =============================================================================
+// STATE. Held in memory for the session only.
+// =============================================================================
+let apiKey = null;
+let plan = "free"; // 'free' or 'pro'
+let callsToday = 0;
+let dayStarted = new Date().toDateString();
+
+// =============================================================================
+// Helpers
+// =============================================================================
+const $ = (id) => document.getElementById(id);
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => (
+  { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+));
+
+function setStatus(el, kind, label, msg, withSpinner = false) {
+  if (!kind) { el.innerHTML = ""; return; }
+  const spin = withSpinner ? '<span class="spinner" aria-hidden="true"></span>' : "";
+  el.innerHTML = `<div class="status ${escapeHtml(kind)}">${spin}<span class="label">${escapeHtml(label)}</span><span>${escapeHtml(msg)}</span></div>`;
+}
+
+function updateMeter() {
+  const meter = $("usage-meter");
+  const fill = $("meter-fill");
+  const text = $("usage-text");
+  if (plan === "pro") {
+    text.textContent = "Pro: unlimited";
+    fill.style.width = "100%";
+    fill.style.background = "var(--ok)";
+    meter.classList.remove("exceeded");
+    return;
+  }
+  // Free tier
+  fill.style.background = "";
+  const pct = Math.min(100, (callsToday / CONFIG.freeTierDailyLimit) * 100);
+  fill.style.width = pct + "%";
+  text.textContent = `Free tier: ${callsToday} / ${CONFIG.freeTierDailyLimit} calls today`;
+  meter.classList.toggle("exceeded", callsToday >= CONFIG.freeTierDailyLimit);
+}
+
+function highlightActivePlan() {
+  $("plan-free").classList.toggle("active", plan === "free");
+  $("plan-pro").classList.toggle("active", plan === "pro");
+  // Add or remove badge on pro card
+  let badge = document.querySelector("#plan-pro .plan-badge");
+  if (plan === "pro") {
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.className = "plan-badge";
+      badge.textContent = "Active";
+      $("plan-pro").appendChild(badge);
+    }
+  } else if (badge) {
+    badge.remove();
+  }
+}
+
+// =============================================================================
+// API client. The key flows in memory; never logged, never persisted.
+// =============================================================================
+async function validateKey(key) {
+  const r = await fetch(CONFIG.apiBase, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": key,
+      "anthropic-version": CONFIG.apiVersion,
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify({
+      model: CONFIG.model,
+      max_tokens: 1,
+      messages: [{ role: "user", content: "hi" }]
+    })
+  });
+  if (r.status === 401) throw new Error("Invalid API key.");
+  if (r.status === 403) throw new Error("Key lacks access to required model.");
+  if (r.status === 429) throw new Error("Rate limited. Try again shortly.");
+  if (!r.ok) {
+    let detail = "";
+    try { const j = await r.json(); detail = j.error && j.error.message ? j.error.message : ""; } catch {}
+    throw new Error(`Validation failed (${r.status}): ${detail}`);
+  }
+  return true;
+}
+
+async function callApi(text) {
+  const r = await fetch(CONFIG.apiBase, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": CONFIG.apiVersion,
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify({
+      model: CONFIG.model,
+      max_tokens: 1024,
+      system: CONFIG.systemPrompt,
+      messages: [{ role: "user", content: text }]
+    })
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const detail = (data && data.error && data.error.message) || `HTTP ${r.status}`;
+    throw new Error(detail);
+  }
+  return (data.content || [])
+    .filter(b => b.type === "text")
+    .map(b => b.text)
+    .join("");
+}
+
+// =============================================================================
+// Wiring: plans
+// =============================================================================
+$("plan-free-btn").addEventListener("click", () => {
+  plan = "free";
+  highlightActivePlan();
+  $("license-fields").style.display = "none";
+  setStatus($("license-status"), "", "", "");
+  updateMeter();
+});
+
+$("plan-pro-btn").addEventListener("click", () => {
+  $("license-fields").style.display = "block";
+  $("license-code").focus();
+});
+
+$("license-cancel-btn").addEventListener("click", () => {
+  $("license-fields").style.display = "none";
+  setStatus($("license-status"), "", "", "");
+});
+
+$("license-submit-btn").addEventListener("click", () => {
+  const code = $("license-code").value.trim().toUpperCase();
+  if (!CONFIG.licenseCodePattern.test(code)) {
+    setStatus($("license-status"), "err", "Invalid", 'Code format must be "PRO-XXXX-XXXX-XXXX".');
+    return;
+  }
+  // Real impls should hit your server here. This is a demo.
+  plan = "pro";
+  highlightActivePlan();
+  $("license-fields").style.display = "none";
+  setStatus($("license-status"), "ok", "Active", "Pro plan active for this session.");
+  updateMeter();
+});
+
+// =============================================================================
+// Wiring: key
+// =============================================================================
+$("validate-btn").addEventListener("click", async () => {
+  const key = $("api-key").value.trim();
+  if (!key) { setStatus($("key-status"), "warn", "Empty", "Paste your key first."); $("api-key").focus(); return; }
+  if (!key.startsWith("sk-ant-")) { setStatus($("key-status"), "err", "Invalid", 'Anthropic keys start with "sk-ant-".'); return; }
+  $("validate-btn").disabled = true;
+  setStatus($("key-status"), "ok", "Checking", "Validating with Anthropic...", true);
+  try {
+    await validateKey(key);
+    apiKey = key;
+    $("api-key").value = "";
+    $("key-section").dataset.state = "validated";
+    setStatus($("key-status"), "", "", "");
+  } catch (err) {
+    apiKey = null;
+    setStatus($("key-status"), "err", "Failed", err.message);
+  } finally {
+    $("validate-btn").disabled = false;
+  }
+});
+
+$("clear-btn").addEventListener("click", () => {
+  apiKey = null;
+  $("key-section").dataset.state = "empty";
+  $("tool-output").style.display = "none";
+  $("tool-output").textContent = "";
+  setStatus($("key-status"), "", "", "");
+  setStatus($("run-status"), "", "", "");
+  $("api-key").focus();
+});
+
+// =============================================================================
+// Wiring: run tool
+// =============================================================================
+$("run-btn").addEventListener("click", async () => {
+  // Day rollover
+  const today = new Date().toDateString();
+  if (today !== dayStarted) { dayStarted = today; callsToday = 0; updateMeter(); }
+
+  const text = $("tool-input").value.trim();
+  if (!text) { setStatus($("run-status"), "warn", "Empty", "Type some text first."); $("tool-input").focus(); return; }
+
+  if (plan === "free" && callsToday >= CONFIG.freeTierDailyLimit) {
+    setStatus($("run-status"), "err", "Limit", `Free tier limit reached (${CONFIG.freeTierDailyLimit}/day). Upgrade to Pro or wait until tomorrow.`);
+    return;
+  }
+
+  $("run-btn").disabled = true;
+  setStatus($("run-status"), "ok", "Sending", "Calling Anthropic...", true);
+  $("tool-output").style.display = "none";
+  $("tool-output").textContent = "";
+  try {
+    const result = await callApi(text);
+    $("tool-output").textContent = result;
+    $("tool-output").style.display = "block";
+    callsToday++;
+    updateMeter();
+    setStatus($("run-status"), "", "", "");
+  } catch (err) {
+    setStatus($("run-status"), "err", "Failed", err.message);
+  } finally {
+    $("run-btn").disabled = false;
+  }
+});
+
+$("tool-input").addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); $("run-btn").click(); }
+});
+
+$("api-key").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); $("validate-btn").click(); }
+});
+
+// Theme
+function applyTheme(theme) {
+  document.body.dataset.theme = theme;
+  $("theme-label").textContent = theme === "dark" ? "Light" : "Dark";
+  $("theme-btn").setAttribute("aria-pressed", String(theme === "dark"));
+  const icon = $("theme-icon");
+  if (theme === "dark") {
+    icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+  } else {
+    icon.innerHTML = '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>';
+  }
+}
+$("theme-btn").addEventListener("click", () => {
+  applyTheme(document.body.dataset.theme === "dark" ? "light" : "dark");
+});
+if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) applyTheme("dark");
+
+// Initial
+highlightActivePlan();
+updateMeter();
+</script>
+</body>
+</html>
