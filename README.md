@@ -2,6 +2,8 @@
 
 A complete BYOK SaaS scaffolded into one HTML file. Free tier with daily limit, Pro tier unlocked by a license code, key never leaves the user's browser. Adapt by replacing the demo tool with your own logic.
 
+**Live demo:** https://0xelitesystem.github.io/single-file-saas-template/
+
 ## Why
 
 You can ship a real, paid product as one HTML file. No backend, no database, no server costs. The user pays the LLM provider directly (their key, their bill); you charge a one-time license fee for unlimited usage and the convenience of your tool.
@@ -74,7 +76,7 @@ MIT. See [LICENSE](LICENSE).
 
 ## Related
 
-- [byok-patterns](https://github.com/0xelitesystem/byok-patterns) — three deeply-built BYOK reference implementations
-- [claude-eval-harness](https://github.com/0xelitesystem/claude-eval-harness) — compare Claude models side-by-side
-- [prompt-cost-calculator](https://github.com/0xelitesystem/prompt-cost-calculator) — estimate token cost across providers
-- [prompt-templates](https://github.com/0xelitesystem/prompt-templates) — production prompts targeting LLM failure modes
+- [byok-patterns](https://github.com/0xelitesystem/byok-patterns), three deeply-built BYOK reference implementations
+- [claude-eval-harness](https://github.com/0xelitesystem/claude-eval-harness), compare Claude models side-by-side
+- [prompt-cost-calculator](https://github.com/0xelitesystem/prompt-cost-calculator), estimate token cost across providers
+- [prompt-templates](https://github.com/0xelitesystem/prompt-templates), production prompts targeting LLM failure modes
