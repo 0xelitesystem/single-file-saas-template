@@ -70,6 +70,10 @@ Your only ongoing cost is the domain (~$10/yr) if you want a custom URL. Otherwi
 - No real backend. Everything is in the browser plus calls to Anthropic.
 - No server-side license verification. Add one if revenue protection matters.
 
+## More
+
+Part of a catalog of single-file browser tools and plain-language references, all MIT licensed and dependency-free: [0xelitesystem.github.io](https://0xelitesystem.github.io/). Built by [elitesystem.ai](https://elitesystem.ai).
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
