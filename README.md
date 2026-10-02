@@ -4,7 +4,7 @@ A complete BYOK SaaS scaffolded into one HTML file. Free tier with daily limit, 
 
 **Live demo:** https://0xelitesystem.github.io/single-file-saas-template/
 
-## Why
+## Why this exists
 
 You can ship a real, paid product as one HTML file. No backend, no database, no server costs. The user pays the LLM provider directly (their key, their bill); you charge a one-time license fee for unlimited usage and the convenience of your tool.
 
@@ -25,11 +25,18 @@ A working scaffold that demonstrates:
 
 The whole thing is one HTML file, around 700 lines. Open it in any browser, no build step.
 
-## Use it
+## Use
 
 Open `index.html` in a browser. Or visit the hosted demo at `https://0xelitesystem.github.io/single-file-saas-template/` once GitHub Pages is enabled.
 
 For testing the Pro flow: use a code matching `PRO-XXXX-XXXX-XXXX` (any letters/digits). Real implementations should verify codes against a server.
+
+Steps:
+
+1. Open `index.html`.
+2. Under Choose a plan, click Use free tier, or click I have a code, enter a code in the format `PRO-XXXX-XXXX-XXXX`, and click Activate.
+3. Under Connect your key, paste an Anthropic API key and click Validate & save.
+4. Under Use the tool, paste text into Text to rewrite and click Rewrite.
 
 ## Adapt this for your product
 
@@ -69,6 +76,25 @@ Your only ongoing cost is the domain (~$10/yr) if you want a custom URL. Otherwi
 - No multi-user state. Single-user tool.
 - No real backend. Everything is in the browser plus calls to Anthropic.
 - No server-side license verification. Add one if revenue protection matters.
+
+## Privacy
+
+Your API key, plan, and daily call count live in JavaScript memory in this tab only. Nothing is written to localStorage, sessionStorage, or cookies, so closing or refreshing the tab clears them. The license code is checked against a pattern inside the page and is not sent anywhere.
+
+The page does make network calls, all sent directly from your browser to `https://api.anthropic.com/v1/messages` using your key: one 1-token request when you click Validate & save, and one request carrying your text and the template's system prompt each time you click Rewrite. No other server receives anything. The Buy via Stripe button is a placeholder link that only opens if you click it. There are no analytics.
+
+## Run locally
+
+```
+git clone https://github.com/0xelitesystem/single-file-saas-template
+cd single-file-saas-template
+```
+
+Open `index.html` in a browser, or serve the folder with `python -m http.server` and visit http://localhost:8000.
+
+## Build
+
+No build step. The whole tool is one `index.html` file.
 
 ## More
 
