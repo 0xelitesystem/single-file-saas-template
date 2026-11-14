@@ -107,6 +107,6 @@ MIT. See [LICENSE](LICENSE).
 ## Related
 
 - [byok-patterns](https://github.com/0xelitesystem/byok-patterns), three deeply-built BYOK reference implementations
-- [claude-eval-harness](https://github.com/0xelitesystem/claude-eval-harness), compare Claude models side-by-side
+- [prompt-model-side-by-side](https://github.com/0xelitesystem/prompt-model-side-by-side), compare Claude models side-by-side
 - [prompt-cost-calculator](https://github.com/0xelitesystem/prompt-cost-calculator), estimate token cost across providers
 - [prompt-templates](https://github.com/0xelitesystem/prompt-templates), production prompts targeting LLM failure modes
